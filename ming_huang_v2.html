@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<meta charset="UTF-8">
+<html lang="en">
+
+<head>
+  <title>Play Ground</title>
+  <style>
+  table, td {
+    border: 1px solid black;
+    padding:5px;
+  }
+  </style>
+  <script>
+    var Board; //Board will set as an array at Main()
+    var xsize = 16;
+    var ysize = 16; //this will have a 10x10 board
+    var gen = 2; //generation count 0 is current generation and 1 is next generation;
+    var dead = 0;
+    var alive = 1;
+
+
+
+    function Main()
+    {
+      // *** Change this variable to choose a different baord setup from below
+      var BoardSetup = "glider";
+
+    	Board = new Array(gen); //xsize = 10 Board is an array Board[] with 10 in length
+        for(var g=0; g<gen;++g){
+          Board[g] = new Array(xsize); //Board[0][yaxis]
+        	for(var x = 0; x < xsize; ++x) //for x=0 and loop if x<10
+        	{
+        		Board[g][x]=new Array(ysize);
+        		for(var y = 0; y < ysize; ++y){
+        			Board[g][x][y] = 0;} //making this equal 0 to set all cells to dead current and next generation
+        	}
+        }
+      //the grids that is alive initially: xstarts with 0 and y starts with 0
+    	if(BoardSetup == "blinker")
+    	{
+          Board[0][1][0] = 1;
+    	    Board[0][1][1] = 1;
+    	    Board[0][1][2] = 1;
+        }
+        else if(BoardSetup == "glider")
+        {
+    	    Board[0][2][0] = 1;
+    	    Board[0][2][1] = 1;
+    	    Board[0][2][2] = 1;
+    	    Board[0][1][2] = 1;
+    	    Board[0][0][1] = 1;
+        }
+        else if(BoardSetup == "flower")
+        {
+            Board[0][4][6] = 1;
+            Board[0][5][6] = 1;
+            Board[0][6][6] = 1;
+            Board[0][7][6] = 1;
+            Board[0][8][6] = 1;
+            Board[0][9][6] = 1;
+            Board[0][10][6] = 1;
+            Board[0][4][7] = 1;
+            Board[0][6][7] = 1;
+            Board[0][8][7] = 1;
+            Board[0][10][7] = 1;
+            Board[0][4][8] = 1;
+            Board[0][5][8] = 1;
+            Board[0][6][8] = 1;
+            Board[0][7][8] = 1;
+            Board[0][8][8] = 1;
+            Board[0][9][8] = 1;
+            Board[0][10][8] = 1;
+        }
+
+    	DrawBoard(Board);
+    } //Ends Main()
+
+    function DrawBoard(Board) //draw when loaded and button clicked
+    {
+    	var Text = "";
+    	for(var y = 0; y < ysize; ++y)
+    	{
+    		for(var x = 0; x < xsize; ++x){
+    			Text += Board[0][x][y]==alive ? "o":"_";
+        } //draw o when current state is alive and + when dead Board is a multidimension array
+    		Text += "<br/>";
+    	}
+    	document.getElementById("board").innerHTML = Text;
+    }
+
+
+
+
+    function NextStep(Board) //function call when button clicked
+    {//alert("being NextStep");
+      var g=0; //test against CURRENT generation status
+    	for(var x = 0; x < xsize; ++x){
+    		for(var y = 0; y < ysize; ++y)
+    		{
+    			var n = Neighbors(Board,g,x,y); //n is for neighboring cells
+          //set next generation to live ONLY if n score is 3
+          if(Board[g][x][y]==dead){
+            if(n==3){
+              makeNextGenLive(Board,g,x,y);
+              //alert("make alive in next gen");
+            }else{
+              makeNextGenDead(Board,g,x,y);
+              //alert("make dead in next gen");
+            }
+          }else{//if alive?
+            --n;//subtract self's n score of one
+            if(n==2||n==3){
+              makeNextGenLive(Board,g,x,y);
+            }else{
+              makeNextGenDead(Board,g,x,y);
+            }
+          }
+        }//alert("this is the end of the xloop x= "+x);
+      }//alert("you can see this before your NextStep function has been ran to the end");
+
+    }//End NextStep()
+
+
+    function setCurrentGen(){//will pass in g from the next step function
+      for(var x = 0; x < xsize; ++x){
+        for(var y = 0; y < ysize; ++y)
+        {
+          Board[0][x][y]=Board[1][x][y]; //change the current gen equal to next generation (time traveled)
+        }
+      }
+    }//Ends setCurrentGen
+
+    function resetNextGen(){
+      for(var x = 0; x < xsize; ++x){
+        for(var y = 0; y < ysize; ++y)
+        {
+          Board[1][x][y]=0; //reset the next gen equal to 0
+        }
+      }
+    }//Ends resetNextGen
+
+
+    function makeNextGenLive(Board,g,x,y){
+      Board[1][x][y]=1;
+    }
+
+    function makeNextGenDead(Board,g,x,y){
+      Board[1][x][y]=0;
+    }
+
+    //neighbor function does not work with x=0s
+    function Neighbors(Board,g,x,y)//remember Board is an array
+    {
+    	var n = 0; //neighbor alive/dead score if neighboring cell is alive score + 1; initial value is 0
+
+      for(dx=-1;dx <= 1; ++dx){   //missing {};
+    		for(dy=-1;dy <= 1; ++dy)  //when dx && dy are both 0, ax=x and ay=y, Do not add 1 to n if this is the case
+    		{
+    			var ax = x+dx;
+        	var ay = y+dy;
+          if((x+dx)==-1){//if neighbor is -1 it will refer to the last index of array
+            ax=15;
+          }
+          if((y+dy)==-1){
+            ay=15; //
+          };
+          if((x+dx)>15){
+            ax=0;//set back to first index which is 0;
+          };
+          if((y+dy)>15){
+            ay=0;
+          };
+        	if(Board[g][ax][ay]==alive){ //g=0 when function was call in nextstep()
+    					 ++n; //n is neighbor cell score total; n increase by one
+    				 };
+    		}
+    	}
+      //alert("this is the "+g+" generation and there are " +n+" living cells neighboring "+x+"and "+y);
+      //addRow(Board,g,x,y,n);
+    	return n;//n is neighbor cell score total INCLUDING self score
+    }//Ends neighbors function
+
+    function addRow(Board,g,x,y,n){
+      var table=document.getElementById('myTable');
+      var row=table.insertRow(-1);
+      var cell1=row.insertCell(0);
+      var cell2=row.insertCell(1);
+      var cell3=row.insertCell(2);
+      cell1.innerHTML=x;
+      cell2.innerHTML=y;
+      cell3.innerHTML=n;
+    }
+
+
+  </script>
+</head>
+
+<body onload="Main()">
+
+  <div id="board">
+  </div>
+  <a href="#IGoNowhere" onclick="NextStep(Board);setCurrentGen();DrawBoard(Board);resetNextGen()">Next -></a>
+
+  <!--<p id="test"></p>
+  <table id="myTable">
+    <tr>
+      <th>x</th>
+      <th>y</th>
+      <th>neighbors</th>
+    </tr>
+
+  </table>-->
+</body>
+
+
+
+</html>
